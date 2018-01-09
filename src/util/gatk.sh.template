@@ -1,0 +1,85 @@
+#!/bin/bash
+#SBATCH --job-name=SAMPLENAME-hc
+#SBATCH --account VR0211
+#SBATCH --reservation VR0211
+#SBATCH --mem=32G
+#SBATCH --time=80:00:00
+#SBATCH --ntasks=1
+#SBATCH --nodes=1
+#SBATCH -p main
+
+set -e
+
+module load java/1.8.0_101
+
+SAMPLE=SAMPLENAME
+ROOT=/scratch/VR0320/pgeorgeson/pan-prostate
+BUNDLE=$ROOT/tools/gatk-bundle
+GATK=$ROOT/tools/GenomeAnalysisTK-3.7.0.jar
+REFERENCE=$ROOT/reference-wgs-1.1.2/core_ref_GRCh37d5/genome.fa
+OUTDIR=$ROOT/out/${SAMPLE}.gatk
+
+echo "starting $SAMPLE at $(date)"
+
+mkdir -p $OUTDIR
+
+echo "starting $SAMPLE:BaseRecalibrator at $(date)"
+java -jar $GATK \
+     -T BaseRecalibrator \
+     -R $REFERENCE \
+     -nct 1 \
+     -I $ROOT/out/${SAMPLE}.mapped.bam \
+     -knownSites $BUNDLE/dbsnp_138.b37.vcf.bgz \
+     -knownSites $BUNDLE/Mills_and_1000G_gold_standard.indels.b37.vcf.bgz \
+     -knownSites $BUNDLE/1000G_phase1.indels.b37.vcf.bgz \
+     -o $OUTDIR/${SAMPLE}.recal_table
+
+echo "starting $SAMPLE:PrintReads at $(date)"
+java -jar $GATK \
+     -T PrintReads \
+     -R $REFERENCE \
+     -nct 1 \
+     -I $ROOT/out/${SAMPLE}.mapped.bam \
+     -BQSR $OUTDIR/${SAMPLE}.recal_table \
+     -o $OUTDIR/${SAMPLE}.recal.bam
+
+echo "starting $SAMPLE:HaplotypeCaller at $(date)"
+java -jar $GATK \
+     -T HaplotypeCaller \
+     -R $REFERENCE \
+     -I $OUTDIR/${SAMPLE}.recal.bam \
+     --emitRefConfidence GVCF \
+     --dbsnp $BUNDLE/dbsnp_138.b37.vcf.bgz \
+     -o $OUTDIR/${SAMPLE}.g.vcf.gz \
+     -pairHMM VECTOR_LOGLESS_CACHING
+
+echo "finished $SAMPLE at $(date)"
+
+#echo "starting $SAMPLE:GenotypeGVCF at $(date)"
+#java -jar $path_GATK \
+#                -T GenotypeGVCFs \
+#                -R $path_ref \
+#                --dbsnp $bundle2_8/b37/dbsnp_138.b37.vcf \
+#                --variant sample1.g.vcf.gz --variant sample2.g.vcf.gz <rest of samples> \
+#                -L $chr \
+#                -newQual \
+#                --disable_auto_index_creation_and_locking_when_reading_rods \
+#                -o joint_chr$chr.vcf 
+
+
+# old
+#java -jar ./tools/GenomeAnalysisTK-3.7.0.jar \
+#     -R ./reference-wgs-1.1.2/core_ref_GRCh37d5/genome.fa \
+#     -T HaplotypeCaller \
+#     --num_cpu_threads_per_data_thread 1 \
+#     -I ./out/${SAMPLE}.mapped.bam \
+#     -A AlleleBalance \
+#     -A GCContent \
+#     -A GenotypeSummaries \
+#     -A LikelihoodRankSumTest \
+#     -A StrandBiasBySample \
+#     -A VariantType \
+#     --logging_level INFO \
+#     -stand_call_conf 10 \
+#     -o ./out/CMHS51.hc.vcf
+ 

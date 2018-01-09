@@ -1,0 +1,14 @@
+#!/usr/bin/env bash
+
+set -e
+
+echo "starting platypus at $(date)"
+
+export TMPDIR=ROOT/tmp
+mkdir -p ROOT/tmp
+
+# platypus has to run from build directory
+cd ROOT/tools/Platypus_0.8.1/
+python Platypus.py callVariants --bamFiles=ROOT/out/TUMOUR.mapped.bam,ROOT/out/NORMAL.mapped.bam --refFile=ROOT/reference-wgs-1.1.2/core_ref_GRCh37d5/genome.fa --output=ROOT/out/TUMOUR.platypus.vcf
+
+echo "finishing platypus at $(date)"

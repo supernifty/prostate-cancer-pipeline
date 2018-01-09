@@ -1,0 +1,47 @@
+#!/bin/bash -xv
+#SBATCH --job-name=gridss
+#SBATCH --account ACCOUNT
+#SBATCH --mem=60G
+#SBATCH --time=180:00:00
+#SBATCH --ntasks=8
+#SBATCH --nodes=1
+#SBATCH -p ACCOUNT
+
+set -e
+
+echo "starting gridss at $(date)"
+
+NORMPATH=ROOT/out/TUMOUR.mapped.bam
+TUMPATH=ROOT/out/NORMAL.mapped.bam
+TMPDIR=ROOT/tmp/TUMOUR.gridss
+#BLACKLIST=wgEncodeDacMapabilityConsensusExcludable.bed
+REFERENCE=ROOT/reference-wgs-1.1.2/core_ref_GRCh37d5/genome.fa
+OUTPUT=ROOT/out/TUMOUR.gridss.vcf
+ASSEMBLY=${TMPDIR}/sv.vcf/gridss.assembly.bam
+GRIDSS_JAR=ROOT/tools/gridss-1.4.1-jar-with-dependencies.jar
+
+rm -fr "$TMPDIR"
+mkdir -p "$TMPDIR/sv.vcf"
+
+#module load Java/1.8.0_71
+
+java -ea -Xmx31g \
+	-Dsamjdk.create_index=true \
+	-Dsamjdk.use_async_io_read_samtools=true \
+	-Dsamjdk.use_async_io_write_samtools=true \
+	-Dsamjdk.use_async_io_write_tribble=true \
+	-Dsamjdk.compression_level=1 \
+	-cp $GRIDSS_JAR gridss.CallVariants \
+	TMP_DIR=$TMPDIR \
+	WORKING_DIR=$TMPDIR \
+	REFERENCE_SEQUENCE="$REFERENCE" \
+	INPUT="$NORMPATH" \
+	INPUT="$TUMPATH" \
+	OUTPUT="$OUTPUT" \
+	ASSEMBLY="$ASSEMBLY" \
+	2>ROOT/out/TUMOUR.gridss.log.err \
+	1>ROOT/out/TUMOUR.gridss.log.out
+
+#	BLACKLIST="$BLACKLIST" \
+
+echo "finishing gridss at $(date)"

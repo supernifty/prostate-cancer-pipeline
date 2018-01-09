@@ -1,0 +1,60 @@
+#!/usr/bin/env bash
+
+# -XX:-UsePerfData is to avoid bus error PerfLongVariant::sample
+
+set -e
+
+echo "starting mutect2 at $(date)"
+
+export TMPDIR=ROOT/tmp/TUMOUR.mutect2
+mkdir -p ROOT/tmp/TUMOUR.mutect2
+
+# extract chromosomes
+CHROMS=$(grep "^>" ROOT/reference/core_ref_GRCh37d5/genome.fa | sed 's/^>\([^ ]*\).*/\1/')
+MAX_JOBS=15
+
+RUNNING=0
+VCF_FILES=""
+
+for chrom in $CHROMS; do
+  echo "starting $chrom at $(date)"
+  java \
+     -Djava.io.tmpdir=ROOT/tmp/TUMOUR.mutect2 \
+     -XX:-UsePerfData \
+     -Xmx8g \
+     -jar ROOT/tools/GenomeAnalysisTK.jar \
+     -T MuTect2 \
+     -L $chrom \
+     -R ROOT/reference/core_ref_GRCh37d5/genome.fa \
+     -I:tumor ROOT/out/TUMOUR.mapped.bam \
+     -I:normal ROOT/out/NORMAL.mapped.bam \
+     -o TMP_DIR/$chrom.vcf &
+
+  VCF_FILES="$VCF_FILES -V TMP_DIR/$chrom.vcf"
+  
+  RUNNING=$((RUNNING+1))
+  if [ "$RUNNING" = "$MAX_JOBS" ]; then
+    echo "waiting for current set to finish at $(date)"
+    wait
+    RUNNING=0
+  fi
+done
+
+wait
+
+#     [--dbsnp dbSNP.vcf] \
+#     [--cosmic COSMIC.vcf] \
+
+echo "merging $VCF_FILES at $(date)"
+java \
+    -Djava.io.tmpdir=ROOT/tmp/TUMOUR.mutect2 \
+    -XX:-UsePerfData \
+    -Xmx32g \
+    -cp ROOT/tools/GenomeAnalysisTK.jar \
+    org.broadinstitute.gatk.tools.CatVariants \
+    -R ROOT/reference/core_ref_GRCh37d5/genome.fa \
+    $VCF_FILES \
+    --assumeSorted \
+    -out ROOT/out/TUMOUR.mutect2.vcf
+
+echo "finishing mutect2 at $(date)"
