@@ -12,9 +12,9 @@ import os
 import sys
 
 PADDING=1000
-EXONS="/scratch/VR0320/pgeorgeson/pan-prostate/reference-misc/exons.bed"
-METADATA="/scratch/VR0320/pgeorgeson/pan-prostate/cfg/sample-metadata.csv"
-TMP="/scratch/VR0320/pgeorgeson/pan-prostate/tmp/"
+EXONS="/scratch/VR0211/pan-prostate/reference-misc/exons.bed"
+METADATA="/scratch/VR0211/pan-prostate/cfg/sample-metadata.csv"
+TMP="/scratch/VR0211/pan-prostate/tmp/"
 GENES=set(['IDH1', 'IDH2'])
 
 def process():

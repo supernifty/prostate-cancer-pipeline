@@ -1,0 +1,57 @@
+#!/bin/bash
+#SBATCH --job-name=somaticsniper
+#SBATCH --account VR0211
+#SBATCH --reservation VR0211
+#SBATCH --mem=32768
+#SBATCH --time=48:00:00
+#SBATCH --ntasks=2
+#SBATCH --nodes=1
+#SBATCH -p main
+
+# ROOT_PATH TUMOUR_ID NORMAL_ID
+
+set -e
+
+module load samtools-intel/0.1.6
+
+ROOT="ROOT_PATH"
+
+TUMOUR="TUMOUR_ID"
+NORMAL="NORMAL_ID"
+REFERENCE="$ROOT/reference-wgs-1.1.2/core_ref_GRCh37d5/genome.fa"
+
+echo "starting at $(date)"
+
+# 1a OK
+$ROOT/tools/somatic-sniper-1.0.5.0/build/bin/bam-somaticsniper -q 1 -Q 15 -T 0.85 -N 2 -r 0.001 -F vcf -J -s 0.01 -f $REFERENCE $ROOT/out/${TUMOUR}.mapped.bam $ROOT/out/${NORMAL}.mapped.bam $ROOT/out/${TUMOUR}.sniper.vcf
+
+# 1b
+echo "starting pileup at $(date)"
+samtools pileup -vcf $REFERENCE $ROOT/out/${TUMOUR}.mapped.bam > $ROOT/tmp/${TUMOUR}.pileup
+
+echo "starting varfilter at $(date)"
+samtools.pl varFilter $ROOT/tmp/${TUMOUR}.pileup | awk '$6>=20' | grep -P "\t\*\t" > $ROOT/tmp/${TUMOUR}.indel_pileup
+
+# 2
+echo "starting snpfilter at $(date)"
+perl $ROOT/tools/somatic-sniper-1.0.5.0/src/scripts/snpfilter.pl --snp-file $ROOT/out/${TUMOUR}.sniper.vcf --indel-file $ROOT/tmp/${TUMOUR}.indel_pileup --out-file $ROOT/tmp/${TUMOUR}.SNPfilter
+
+## 3
+echo "starting prepare for readcount at $(date)"
+perl $ROOT/tools/somatic-sniper-1.0.5.0/src/scripts/prepare_for_readcount.pl --snp-file $ROOT/tmp/${TUMOUR}.SNPfilter  --out-file $ROOT/tmp/${TUMOUR}.SNPfilter.pos
+
+echo "starting bam-readcount at $(date)"
+$ROOT/tools/bam-readcount-0.8.0/build/bin/bam-readcount -w 1 -b 15 -q 1 -f $REFERENCE -l $ROOT/tmp/${TUMOUR}.SNPfilter.pos $ROOT/out/${TUMOUR}.mapped.bam > $ROOT/tmp/${TUMOUR}.readcount
+
+#
+# 4
+echo "starting fpfilter at $(date)"
+perl $ROOT/tools/somatic-sniper-1.0.5.0/src/scripts/fpfilter.pl --snp-file $ROOT/tmp/${TUMOUR}.SNPfilter --readcount-file $ROOT/tmp/${TUMOUR}.readcount > $ROOT/tmp/${TUMOUR}.fp_pass
+
+#
+# 5
+echo "starting highconfidence at $(date)"
+perl $ROOT/tools/somatic-sniper-1.0.5.0/src/scripts/highconfidence.pl --min-mapping-quality 40 --min-somatic-score 40 --snp-file $ROOT/tmp/${TUMOUR}.SNPfilter.fp_pass --lq-output $ROOT/out/${TUMOUR}.sniper.low.vcf --out-file $ROOT/out/${TUMOUR}.sniper.high.vcf
+
+#
+echo "finished at $(date)"

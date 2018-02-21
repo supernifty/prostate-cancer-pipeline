@@ -339,13 +339,48 @@ class Stages(object):
             for line in open('{root}/src/util/delly.sh.template'.format(root=config.ROOT), 'r'):
                 new_line = re.sub('TUMOUR', tumour_id, line)
                 new_line = re.sub('NORMAL', normal_id, new_line)
-                new_line = re.sub('CORES', str(cpu), new_line)
+                new_line = re.sub('ROOT', config.ROOT, new_line)
+                new_line = re.sub('ACCOUNT', config.ACCOUNT, new_line)
                 analyse_fh.write(new_line)
 
         #command = 'singularity exec -i --bind {in_dir}:/mnt/in,{out}:/mnt/out,{reference}:/mnt/reference,{tmp_dir}:/mnt/tmp --workdir {tmp_dir} --home {tmp_dir}/home:/home/z --contain {root}/img/delly-2.0.0.img bash /mnt/tmp/delly.sh 1>{prefix}.delly.log.out 2>{prefix}.delly.log.err && mv {tmp_dir}/workdir {prefix}.delly.results && touch "{output}" && rm -r "{tmp_dir}"'.format(root=config.ROOT, in_dir=config.IN, out=config.OUT, reference=config.REFERENCE_DELLY, tmp=config.TMP, tmp_dir=tmp_dir, tmp_id=tmp_id, prefix=prefix, output=output)
-        command = 'singularity exec -i --bind {in_dir}:/mnt/in,{out}:/mnt/out,{reference}:/mnt/reference,{tmp_dir}:/mnt/tmp --workdir {tmp_dir} --home {tmp_dir}/home:/home/z --contain {root}/img/delly-2.0.0a.img bash /mnt/tmp/delly.sh 1>{prefix}.delly.log.out 2>{prefix}.delly.log.err && mv {tmp_dir}/workdir {prefix}.delly.results && touch "{output}"'.format(root=config.ROOT, in_dir=config.IN, out=config.OUT, reference=config.REFERENCE_DELLY, tmp=config.TMP, tmp_dir=tmp_dir, tmp_id=tmp_id, prefix=prefix, output=output)
+        #command = 'singularity exec -i --bind {in_dir}:/mnt/in,{out}:/mnt/out,{reference}:/mnt/reference,{tmp_dir}:/mnt/tmp --workdir {tmp_dir} --home {tmp_dir}/home:/home/z --contain {root}/img/delly-2.0.0a.img bash /mnt/tmp/delly.sh 1>{prefix}.delly.log.out 2>{prefix}.delly.log.err && mv {tmp_dir}/workdir {prefix}.delly.results && touch "{output}"'.format(root=config.ROOT, in_dir=config.IN, out=config.OUT, reference=config.REFERENCE_DELLY, tmp=config.TMP, tmp_dir=tmp_dir, tmp_id=tmp_id, prefix=prefix, output=output)
+
+        command = 'bash {tmp_dir}/delly.sh 2>{prefix}.delly.log.err 1>{prefix}.delly.log.out && touch "{output}" && rm -r {tmp_dir}'.format(tmp_dir=tmp_dir, output=output, prefix=prefix)
 
         run_stage(self.state, 'delly', command)
+
+    def delly2(self, input, output, cpu=6):
+        '''
+          run the delly2 singularity container
+        '''
+        prefix = re.sub('.mapped.bam$', '', input) # full path without mapped.bam
+        tumour_id = prefix.split('/')[-1] # e.g. CMHS1
+        normal_id = util.find_normal(tumour_id, open("{}/cfg/sample-metadata.csv".format(config.ROOT), 'r'))
+
+        # nothing to do for normal sample
+        if normal_id is None: 
+            safe_make_dir(os.path.dirname(output))
+            with open(output, 'w') as output_fh:
+                output_fh.write('Normal sample does not require analysis. See the relevant tumour file.\n')
+            return
+
+        # it's a tumour
+        tmp_id = 'delly2-{}-{}'.format(tumour_id, str(uuid.uuid4()))
+        tmp_dir = '{tmp}/{tmp_id}'.format(tmp=config.TMP, tmp_id=tmp_id)
+        safe_make_dir('{}/home'.format(tmp_dir))
+        with open('{tmp_dir}/delly2.sh'.format(tmp_dir=tmp_dir), 'w') as analyse_fh:
+            for line in open('{root}/src/util/delly2.sh.template'.format(root=config.ROOT), 'r'):
+                new_line = re.sub('TUMOUR', tumour_id, line)
+                new_line = re.sub('NORMAL', normal_id, new_line)
+                new_line = re.sub('ROOT', config.ROOT, new_line)
+                new_line = re.sub('ACCOUNT', config.ACCOUNT, new_line)
+                analyse_fh.write(new_line)
+
+        command = 'bash {tmp_dir}/delly2.sh 2>{prefix}.delly2.log.err 1>{prefix}.delly2.log.out && touch "{output}" && rm -r {tmp_dir}'.format(tmp_dir=tmp_dir, output=output, prefix=prefix)
+
+        run_stage(self.state, 'delly2', command)
+
 
     def muse(self, input, output):
         '''
@@ -557,3 +592,141 @@ class Stages(object):
         command = 'bash {tmp_dir}/platypus.sh 2>{prefix}.platypus.log.err 1>{prefix}.platypus.log.out && touch "{output}" && rm -r {tmp_dir}'.format(tmp_dir=tmp_dir, output=output, prefix=prefix)
 
         run_stage(self.state, 'platypus', command)
+
+    def hmmcopy(self, input, output):
+        '''
+            run hmmcopy
+        '''
+        prefix = re.sub('.mapped.bam$', '', input) # full path without mapped.bam
+        tumour_id = prefix.split('/')[-1] # e.g. CMHS1
+        normal_id = util.find_normal(tumour_id, open("{}/cfg/sample-metadata.csv".format(config.ROOT), 'r'))
+
+        # tumour_id is actually a normal
+        if normal_id is None: 
+            target_dir = '{}.hmmcopy'.format(prefix)
+            safe_make_dir(target_dir)
+            with open('{target_dir}/hmmcopy.sh'.format(target_dir=target_dir), 'w') as analyse_fh:
+                for line in open('{root}/src/util/hmmcopy-normal.sh.template'.format(root=config.ROOT), 'r'):
+                    new_line = re.sub('NORMAL', tumour_id, line)
+                    new_line = re.sub('ROOT', config.ROOT, new_line)
+                    new_line = re.sub('TARGET_DIR', target_dir, new_line)
+                    analyse_fh.write(new_line)
+
+            command = 'bash {target_dir}/hmmcopy.sh 2>{prefix}.hmmcopy.log.err 1>{prefix}.hmmcopy.log.out && touch "{output}"'.format(target_dir=target_dir, output=output, prefix=prefix)
+
+        else:
+            # it's a tumour
+            target_dir = '{}.hmmcopy'.format(prefix)
+            safe_make_dir(target_dir)
+
+            with open('{target_dir}/hmmcopy.sh'.format(target_dir=target_dir), 'w') as analyse_fh:
+                for line in open('{root}/src/util/hmmcopy.sh.template'.format(root=config.ROOT), 'r'):
+                    new_line = re.sub('TUMOUR', tumour_id, line)
+                    new_line = re.sub('NORMAL', normal_id, new_line)
+                    new_line = re.sub('ROOT', config.ROOT, new_line)
+                    new_line = re.sub('TARGET_DIR', target_dir, new_line)
+                    analyse_fh.write(new_line)
+
+            command = 'bash {target_dir}/hmmcopy.sh 2>{prefix}.hmmcopy.log.err 1>{prefix}.hmmcopy.log.out && touch "{output}"'.format(target_dir=target_dir, output=output, prefix=prefix)
+
+        run_stage(self.state, 'hmmcopy', command)
+
+    def callable_bases(self, input, output):
+        '''
+            run callable bases
+        '''
+
+        MINIMUM_COVERAGE_TUMOR = '17'
+        MINIMUM_COVERAGE_NORMAL = '10'
+
+        prefix = re.sub('.mapped.bam$', '', input) # full path without mapped.bam
+        tumour_id = prefix.split('/')[-1] # e.g. CMHS1
+        normal_id = util.find_normal(tumour_id, open("{root}/cfg/sample-metadata.csv".format(root=config.ROOT), 'r'))
+
+        # nothing to do for normal sample
+        if normal_id is None: 
+            safe_make_dir(os.path.dirname(output))
+            with open(output, 'w') as output_fh:
+                output_fh.write('Normal sample does not require analysis. See the relevant tumour file.\n')
+            return
+
+        # it's a tumour
+        with open('{tmp_dir}/{tumour_id}.callable_bases.sh'.format(tmp_dir=config.TMP, tumour_id=tumour_id), 'w') as analyse_fh:
+            for line in open('{root}/src/util/callable_bases.sh.template'.format(root=config.ROOT), 'r'):
+                new_line = re.sub('TUMOUR', tumour_id, line)
+                new_line = re.sub('NORMAL', normal_id, new_line)
+                new_line = re.sub('ROOT', config.ROOT, new_line)
+                new_line = re.sub('TMP_DIR', config.TMP, new_line)
+                new_line = re.sub('MIN_TUM', MINIMUM_COVERAGE_TUMOR, new_line)
+                new_line = re.sub('MIN_NORM', MINIMUM_COVERAGE_NORMAL, new_line)
+                analyse_fh.write(new_line)
+
+        command = 'bash {tmp_dir}/{tumour_id}.callable_bases.sh 2>{prefix}.callable_bases.log.err 1>{prefix}.callable_bases.log.out && touch "{output}"'.format(tmp_dir=config.TMP, tumour_id=tumour_id, output=output, prefix=prefix)
+
+        run_stage(self.state, 'callable_bases', command)
+
+    def somatic_sniper(self, input, output):
+        '''
+            run somatic sniper
+        '''
+
+        prefix = re.sub('.mapped.bam$', '', input) # full path without mapped.bam
+        tumour_id = prefix.split('/')[-1] # e.g. CMHS1
+        normal_id = util.find_normal(tumour_id, open("{root}/cfg/sample-metadata.csv".format(root=config.ROOT), 'r'))
+
+        # nothing to do for normal sample
+        if normal_id is None: 
+            safe_make_dir(os.path.dirname(output))
+            with open(output, 'w') as output_fh:
+                output_fh.write('Normal sample does not require analysis. See the relevant tumour file.\n')
+            return
+
+        # it's a tumour
+        with open('{tmp_dir}/{tumour_id}.somatic_sniper.sh'.format(tmp_dir=config.TMP, tumour_id=tumour_id), 'w') as analyse_fh:
+            for line in open('{root}/src/util/somatic_sniper.sh.template'.format(root=config.ROOT), 'r'):
+                new_line = re.sub('TUMOUR_ID', tumour_id, line)
+                new_line = re.sub('NORMAL_ID', normal_id, new_line)
+                new_line = re.sub('ROOT_PATH', config.ROOT, new_line)
+                analyse_fh.write(new_line)
+
+        command = 'bash {tmp_dir}/{tumour_id}.somatic_sniper.sh 2>{prefix}.somatic_sniper.log.err 1>{prefix}.somatic_sniper.log.out && touch "{output}"'.format(tmp_dir=config.TMP, tumour_id=tumour_id, output=output, prefix=prefix)
+
+        run_stage(self.state, 'somatic_sniper', command)
+
+    def contest(self, input, output):
+        '''
+            run contest
+        '''
+
+        prefix = re.sub('.mapped.bam$', '', input) # full path without mapped.bam
+        tumour_id = prefix.split('/')[-1] # e.g. CMHS1
+        normal_id = util.find_normal(tumour_id, open("{root}/cfg/sample-metadata.csv".format(root=config.ROOT), 'r'))
+
+        # tumour_id is actually normal
+        if normal_id is None: 
+            normal_id = tumour_id
+            validation_data = open("{root}/out/{sample}.validation".format(root=config.ROOT, sample=normal_id), 'r').readlines()
+            normal_uuid = validation_data[1].split('\t')[8]
+            with open('{tmp_dir}/{tumour_id}.contest.sh'.format(tmp_dir=config.TMP, tumour_id=tumour_id), 'w') as analyse_fh:
+                for line in open('{root}/src/util/contest.sh.template'.format(root=config.ROOT), 'r'):
+                    new_line = re.sub('TUMOUR', tumour_id, line)
+                    new_line = re.sub('NORMAL', normal_id, new_line)
+                    new_line = re.sub('UUID', normal_uuid, new_line)
+                    new_line = re.sub('ROOT', config.ROOT, new_line)
+                    analyse_fh.write(new_line)
+        else:
+            # it's a tumour
+            validation_data = open("{root}/out/{sample}.validation".format(root=config.ROOT, sample=normal_id), 'r').readlines()
+            normal_uuid = validation_data[1].split('\t')[8]
+            with open('{tmp_dir}/{tumour_id}.contest.sh'.format(tmp_dir=config.TMP, tumour_id=tumour_id), 'w') as analyse_fh:
+                for line in open('{root}/src/util/contest.sh.template'.format(root=config.ROOT), 'r'):
+                    new_line = re.sub('TUMOUR', tumour_id, line)
+                    new_line = re.sub('NORMAL', normal_id, new_line)
+                    new_line = re.sub('UUID', normal_uuid, new_line)
+                    new_line = re.sub('ROOT', config.ROOT, new_line)
+                    analyse_fh.write(new_line)
+
+        command = 'bash {tmp_dir}/{tumour_id}.contest.sh 2>{prefix}.contest.log.err 1>{prefix}.contest.log.out && touch "{output}"'.format(tmp_dir=config.TMP, tumour_id=tumour_id, output=output, prefix=prefix)
+
+        run_stage(self.state, 'contest', command)
+

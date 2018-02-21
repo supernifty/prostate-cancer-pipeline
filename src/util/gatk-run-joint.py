@@ -100,7 +100,7 @@ def cmd(c):
   
 def main():
   samplenames = []
-  for line in open('/scratch/VR0320/pgeorgeson/pan-prostate/cfg/sample-metadata.csv', 'r'):
+  for line in open('/scratch/VR0211/pan-prostate/cfg/sample-metadata.csv', 'r'):
     # Sample UUID,Patient UUID,Lab ID,tissue_id,is_normal,Status,Pre-aligned,Validated
     # mini,minipatient,minilab,minitissue,N,testing1,testing2,testing3
     if line.startswith('#'):
@@ -113,14 +113,14 @@ def main():
 
     variants = ' '.join(['--variant $ROOT/out/{samplename}.gatk/{samplename}.g.vcf.gz'.format(samplename=samplename) for samplename in samplenames])
 
-  cmd('mkdir -p /scratch/VR0320/pgeorgeson/pan-prostate/out/gatk/')
+  cmd('mkdir -p /scratch/VR0211/pan-prostate/out/gatk/')
   for chromosome in CHROMOSOMES:
-    cmd('sed "s/CHROMOSOME/{chromosome}/; s/VARIANT_LIST/{variant_list}/g" < /scratch/VR0320/pgeorgeson/pan-prostate/src/util/gatk-joint.sh > /scratch/VR0320/pgeorgeson/pan-prostate/out/gatk/gatk-joint-{chromosome}.sh'.format(chromosome=chromosome, variant_list=variants.replace('/', '\\/').replace('$', '\\$')))
-    cmd('cd /scratch/VR0320/pgeorgeson/pan-prostate/out/gatk && sbatch /scratch/VR0320/pgeorgeson/pan-prostate/out/gatk/gatk-joint-{chromosome}.sh'.format(chromosome=chromosome))
+    cmd('sed "s/CHROMOSOME/{chromosome}/; s/VARIANT_LIST/{variant_list}/g" < /scratch/VR0211/pan-prostate/src/util/gatk-joint.sh > /scratch/VR0211/pan-prostate/out/gatk/gatk-joint-{chromosome}.sh'.format(chromosome=chromosome, variant_list=variants.replace('/', '\\/').replace('$', '\\$')))
+    cmd('cd /scratch/VR0211/pan-prostate/out/gatk && sbatch /scratch/VR0211/pan-prostate/out/gatk/gatk-joint-{chromosome}.sh'.format(chromosome=chromosome))
 
   # post script
   chromosomes = ' '.join(['--variant $OUTDIR/joint_{chromosome}.vcf'.format(chromosome=chromosome) for chromosome in CHROMOSOMES])
-  cmd('sed "s/VARIANT_LIST/{variant_list}/g" < /scratch/VR0320/pgeorgeson/pan-prostate/src/util/gatk-post.sh > /scratch/VR0320/pgeorgeson/pan-prostate/out/gatk/gatk-post.sh'.format(variant_list=chromosomes.replace('/', '\\/').replace('$', '\\$')))
+  cmd('sed "s/VARIANT_LIST/{variant_list}/g" < /scratch/VR0211/pan-prostate/src/util/gatk-post.sh > /scratch/VR0211/pan-prostate/out/gatk/gatk-post.sh'.format(variant_list=chromosomes.replace('/', '\\/').replace('$', '\\$')))
 
 if __name__ == '__main__':
   main()

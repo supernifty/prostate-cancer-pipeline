@@ -49,6 +49,20 @@ wget https://github.com/dkoboldt/varscan/releases/download/2.4.2/VarScan.v2.4.2.
 git clone http://github.com/PapenfussLab/HaveYouSwappedYourSamples.git
 wget 'https://software.broadinstitute.org/gatk/download/auth?package=GATK-archive&version=3.7-0-gcfedb67'
 wget https://raw.githubusercontent.com/andyrimmer/Platypus/master/extensions/Cancer/somaticMutationDetector.py
+wget https://github.com/dellytools/delly/releases/download/v0.7.7/delly_v0.7.7_CentOS5.4_x86_64bit
+wget https://github.com/BoutrosLaboratory/bamql/archive/v1.4.tar.gz
+mv v1.4.tar.gz bamql-v1.4.tar.gz
+git clone https://github.com/shahcompbio/hmmcopy_utils
+cd hmmcopy_utils
+module load cmake/3.6.2
+cmake .
+make
+```
+
+* To build reference data:
+```
+mkdir -p ./reference-hmmcopy
+./tools/hmmcopy_utils/bin/gcCounter -c 1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,X,Y reference-wgs-1.1.2/core_ref_GRCh37d5/genome.fa > reference-hmmcopy/ref.gc.wig
 ```
 
 ## Installing the pipeline
@@ -76,6 +90,7 @@ Also had to run on barcoo:
 ```
 module load python-gcc/2.7.5
 export DRMAA_LIBRARY_PATH=/usr/local/slurm_drmaa/1.0.7-gcc/lib/libdrmaa.so
+module load samtools-intel/1.5
 
 ```
 cp ../src/util/pipeline.config .
@@ -132,7 +147,9 @@ bash ROOT/links-YYYYMMDD.sh
 ```
 cd deploy
 . ../src/util/env.sh
-fastq2bam_pipeline --config pipeline.config --verbose 3 --jobs 10 --use_threads --log_file ./test`date +%Y%m%d`.log
+fastq2bam_pipeline --config pipeline.config.mini.180213 --verbose 3 --jobs 10 --use_threads --log_file ./mini`date +%Y%m%d`.log --checksum_file_name ./ruffus.sqlite.mini
+--just_print # to see what will happen
+--recreate_database # to rebuild what needs to run
 ```
 
 # Components

@@ -2,7 +2,7 @@
 
 set -e
 
-ROOT=/scratch/VR0320/pgeorgeson/pan-prostate
+ROOT=/scratch/VR0211/pan-prostate
 
 executor=$(hostname)
 

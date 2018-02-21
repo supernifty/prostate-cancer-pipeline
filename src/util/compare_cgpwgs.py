@@ -6,10 +6,10 @@ import os
 import random
 import sys
 
-#A="/scratch/VR0320/pgeorgeson/pan-prostate/out/CMHS113.wgs"
-#B="/scratch/VR0320/pgeorgeson/pan-prostate/out/CMHS113.wgs.1.1.2"
-A="/scratch/VR0320/pgeorgeson/pan-prostate/out/CMHS113.cgpwgs.docker.tgz"
-B="/scratch/VR0320/pgeorgeson/pan-prostate/out/CMHS113.wgs.1.1.2"
+#A="/scratch/VR0211/pan-prostate/out/CMHS113.wgs"
+#B="/scratch/VR0211/pan-prostate/out/CMHS113.wgs.1.1.2"
+A="/scratch/VR0211/pan-prostate/out/CMHS113.cgpwgs.docker.tgz"
+B="/scratch/VR0211/pan-prostate/out/CMHS113.wgs.1.1.2"
 TMP="./tmp"
 
 def run(c):

@@ -1,0 +1,48 @@
+#!/bin/bash
+#SBATCH --job-name=hmmcopy-TUMOUR
+#SBATCH --account VR0211
+#SBATCH --reservation VR0211
+#SBATCH --mem=32768
+#SBATCH --time=24:00:00
+#SBATCH --ntasks=4
+#SBATCH --nodes=1
+
+TUMID="TUMOUR"
+NORMID="NORMAL"
+
+set -e
+
+echo "starting at $(date)"
+
+# installation
+#mkdir -p ./reference-hmmcopy
+#PATH=$PATH:ROOT/tools/GEM-binaries-Linux-x86_64-core_i3-20130406-045632/bin
+
+#./tools/hmmcopy_utils/bin/gcCounter -c 1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,X,Y reference-wgs-1.1.2/core_ref_GRCh37d5/genome.fa > reference-hmmcopy/ref.gc.wig
+
+#gem-indexer -T 15 -i $ROOT/reference-wgs-1.1.2/core_ref_GRCh37d5/genome.fa -o $ROOT/reference-hmmcopy/ref.fa.index
+#gem-mappability -T 15 -I $ROOT/reference-hmmcopy/ref.fa.index.gem -l 100 -o $ROOT/reference-hmmcopy/ref.fa.100
+#gem-2-wig -I $ROOT/reference-hmmcopy/ref.fa.index.gem -i $ROOT/reference-hmmcopy/ref.fa.100.mappability -o $ROOT/reference-hmmcopy/ref.fa.100
+
+# before running wig2bw, may need to correct the format of comment lines in ref.fa.100.sizes and ref.fa.100.wig, removing 'dna' and chromosome names starting with 'gi'
+#hmmcopy/0.99.0/util/bigwig/wigToBigWig ref.fa.100.wig ref.fa.100.sizes ref.fa.100.bw
+#hmmcopy/0.99.0/bin/mapCounter -c 1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,X,Y ref.fa.100.bw > ref.map.wig
+
+#sed 's/ dna//g;s/ gi[^\t]*//g' < $ROOT/reference-hmmcopy/ref.fa.100.wig > $ROOT/reference-hmmcopy/ref.fa.100.corrected.wig 
+#sed 's/ dna//g;s/ gi[^\t]*//g' < $ROOT/reference-hmmcopy/ref.fa.100.sizes > $ROOT/reference-hmmcopy/ref.fa.100.corrected.sizes 
+#$ROOT/tools/hmmcopy_utils/util/bigwig/wigToBigWig $ROOT/reference-hmmcopy/ref.fa.100.corrected.wig $ROOT/reference-hmmcopy/ref.fa.100.corrected.sizes $ROOT/reference-hmmcopy/ref.fa.100.bw
+#$ROOT/tools/hmmcopy_utils/bin/mapCounter -c 1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,X,Y $ROOT/reference-hmmcopy/ref.fa.100.bw > $ROOT/reference-hmmcopy/ref.map.wig
+
+# analysis
+ROOT/tools/hmmcopy_utils/bin/readCounter -c 1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,X,Y ROOT/out/${TUMID}.mapped.bam > ROOT/out/${TUMID}.mapped.bam.wig &
+ROOT/tools/hmmcopy_utils/bin/readCounter -c 1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,X,Y ROOT/out/${NORMID}.mapped.bam > ROOT/out/${NORMID}.mapped.bam.wig
+
+wait
+
+module load R-gcc/3.4.0
+
+export R_LIBS=ROOT/r-lib
+
+Rscript ROOT/src/util/hmmcopy.R --ref_dir ROOT/reference-hmmcopy --out_dir TARGET_DIR --normal ROOT/out/${NORMID}.mapped.bam.wig --tumor ROOT/out/${TUMID}.mapped.bam.wig
+
+echo "finished at $(date)"

@@ -1,0 +1,44 @@
+#!/bin/bash
+#SBATCH --job-name=contest_TUMOUR
+#SBATCH --account VR0211
+#SBATCH --reservation VR0211
+#SBATCH --mem=16536
+#SBATCH --time=16:00:00
+#SBATCH --ntasks=2
+#SBATCH --nodes=1
+#SBATCH -p main
+
+# ROOT TUMOUR NORMAL NORMAL_UUID (normal)
+
+set -e
+
+module load java/1.8.0_101
+
+
+java \
+     -jar ROOT/tools/GenomeAnalysisTK-3.7.0.jar \
+     -T ContEst \
+     -R ROOT/reference-wgs-1.1.2/core_ref_GRCh37d5/genome.fa \
+     -I ROOT/out/TUMOUR.mapped.bam \
+     --genotypes ROOT/out/gatk/joint.SNP.indel.recal.postCGP.aln_trim_split.vcf.bgz \
+     --popfile ROOT/tools/gatk-bundle/hapmap_3.3_b37_pop_stratified_af.vcf.gz \
+     -sn NORMAL_UUID \
+     --lane_level_contamination READGROUP \
+     -isr INTERSECTION \
+     -o ROOT/out/TUMOUR.contest.txt 1>ROOT/out/TUMOUR.contest.log.out 2>ROOT/out/TUMOUR.contest.log.err
+
+
+#java \
+#     -jar ROOT/tools/GenomeAnalysisTK-3.7.0.jar \
+#     -T ContEst \
+#     -R ROOT/reference-wgs-1.1.2/core_ref_GRCh37d5/genome.fa \
+#     -I:eval ROOT/out/TUMOUR.mapped.bam \
+#     -I:genotype ROOT/out/NORMAL.mapped.bam \
+#     --popfile ROOT/tools/gatk-bundle/hapmap_3.3_b37_pop_stratified_af.vcf.gz \
+#     -L ROOT/tools/gatk-bundle/hapmap_3.3_b37_pop_stratified_af.vcf.gz \
+#     --minimum_base_count 10 \
+#     -isr INTERSECTION \
+#     -o ROOT/out/TUMOUR.contest.txt 1>ROOT/out/TUMOUR.contest.log.out 2>ROOT/out/TUMOUR.contest.log.err
+
+# for direct running only
+touch ROOT/out/TUMOUR.contest.completed

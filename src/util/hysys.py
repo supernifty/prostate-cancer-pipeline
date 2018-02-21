@@ -19,6 +19,7 @@ logging.basicConfig(format='%(asctime)s %(levelname)s %(message)s', level=loggin
 
 normals = []
 tumors = []
+both = []
 for line in sys.stdin:
   fields = line.strip('\n').split(',')
   sample = fields[0]
@@ -43,12 +44,15 @@ for line in sys.stdin:
       normals.append(sample)
     else:
       tumors.append(sample)
+    both.append(sample)
 
 # write tumors and normals
 with open('normals.hysys', 'w') as fh:
-  fh.write('\n'.join(['./out/{}.hysys'.format(x) for x in normals]))
+  #fh.write('\n'.join(['./out/{}.hysys'.format(x) for x in normals]))
+  fh.write('\n'.join(['./out/{}.hysys'.format(x) for x in both]))
 with open('tumors.hysys', 'w') as fh:
-  fh.write('\n'.join(['./out/{}.hysys'.format(x) for x in tumors]))
+  #fh.write('\n'.join(['./out/{}.hysys'.format(x) for x in tumors]))
+  fh.write('\n'.join(['./out/{}.hysys'.format(x) for x in both]))
 
 # now run hysys
 command = 'bash tools/HaveYouSwappedYourSamples/HaveYouSwappedYourSamples.sh conc tumors.hysys normals.hysys hysys.out'

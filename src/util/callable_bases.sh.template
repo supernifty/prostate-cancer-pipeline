@@ -1,0 +1,15 @@
+#!/usr/bin/env bash
+
+set -e
+
+module load bedtools-intel/2.27.1
+
+# parameters: ROOT, TUMOUR, NORMAL, MIN_TUM, MIN_NORM, TMP_DIR
+
+samtools view -b ROOT/out/TUMOUR.mapped.bam | bedtools genomecov -bga -ibam - | awk '$4 >= MIN_TUM {print $0}' > TMP_DIR/TUMOUR.callable_bases
+samtools view -b ROOT/out/NORMAL.mapped.bam | bedtools genomecov -bga -ibam - | awk '$4 >= MIN_NORM {print $0}' > TMP_DIR/NORMAL.callable_bases
+
+bedtools merge -nonamecheck -i TMP_DIR/TUMOUR.callable_bases > TMP_DIR/TUMOUR.callable.bed
+bedtools merge -nonamecheck -i TMP_DIR/NORMAL.callable_bases > TMP_DIR/NORMAL.callable.bed
+
+bedtools intersect -nonamecheck -a TMP_DIR/TUMOUR.callable.bed -b TMP_DIR/NORMAL.callable.bed > ROOT/out/TUMOUR.callable.bed

@@ -12,7 +12,7 @@ set -e
 
 module load java/1.8.0_101
 
-ROOT=/scratch/VR0320/pgeorgeson/pan-prostate
+ROOT=/scratch/VR0211/pan-prostate
 BUNDLE=$ROOT/tools/gatk-bundle
 GATK=$ROOT/tools/GenomeAnalysisTK-3.7.0.jar
 REFERENCE=$ROOT/reference-wgs-1.1.2/core_ref_GRCh37d5/genome.fa

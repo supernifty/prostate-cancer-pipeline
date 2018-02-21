@@ -10,7 +10,7 @@ import threading
 
 #ROOT='/data/projects/punim0095/pan-prostate'
 #ROOT='/vlsci/VR0320/shared/pgeorgeson/pan-prostate'
-ROOT='/scratch/VR0320/pgeorgeson/pan-prostate'
+ROOT='/scratch/VR0211/pan-prostate'
 
 def read_group_info(filename):
     logging.info('processing {}...'.format(filename))

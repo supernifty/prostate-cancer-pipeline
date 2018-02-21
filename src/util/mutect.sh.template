@@ -1,7 +1,6 @@
 #!/usr/bin/env bash
 
 set -e
-set -v
 
 echo "starting mutect1 at $(date)"
 
@@ -9,11 +8,10 @@ export TMPDIR=ROOT/tmp/TUMOUR.mutect1
 mkdir -p ROOT/tmp/TUMOUR.mutect1
 
 # extract chromosomes
-CHROMS=$(grep "^>" ROOT/reference/core_ref_GRCh37d5/genome.fa | sed 's/^>\([^ ]*\).*/\1/')
+CHROMS=$(grep "^>" ROOT/reference-wgs-1.1.2/core_ref_GRCh37d5/genome.fa | sed 's/^>\([^ ]*\).*/\1/')
 MAX_JOBS=15
 
 RUNNING=0
-#VCF_FILES=""
 
 for chrom in $CHROMS; do
   echo "starting $chrom at $(date)"
@@ -23,14 +21,12 @@ for chrom in $CHROMS; do
      -jar ROOT/tools/mutect-1.1.7.jar \
      --analysis_type MuTect \
      -L $chrom \
-     --reference_sequence ROOT/reference/core_ref_GRCh37d5/genome.fa \
+     --reference_sequence ROOT/reference-wgs-1.1.2/core_ref_GRCh37d5/genome.fa \
      -I:tumor ROOT/out/TUMOUR.mapped.bam \
      -I:normal ROOT/out/NORMAL.mapped.bam \
      --vcf TMP_DIR/$chrom.vcf \
      -o TMP_DIR/$chrom.out &
 
-  #VCF_FILES="$VCF_FILES -V TMP_DIR/$chrom.vcf"
-  
   RUNNING=$((RUNNING+1))
   if [ "$RUNNING" = "$MAX_JOBS" ]; then
     echo "waiting for current set to finish at $(date)"
@@ -40,9 +36,6 @@ for chrom in $CHROMS; do
 done
 
 wait
-
-#     [--dbsnp dbSNP.vcf] \
-#     [--cosmic COSMIC.vcf] \
 
 # concatenate all vcf files
 
@@ -56,10 +49,8 @@ for chrom in $CHROMS; do
   echo "merging $chrom at $(date)..."
   if [ "$FIRST" -eq "1" ]; then
     FIRST=0
-    #cp /scratch/VR0320/pgeorgeson/pan-prostate/tmp/mutect1-MINIA52-73ebd0fa-589d-4fc2-acad-6521d4dd28df/$chrom.vcf /scratch/VR0320/pgeorgeson/pan-prostate/out/MINIA52.mutect1.vcf
     cp TMP_DIR/$chrom.vcf ROOT/out/TUMOUR.mutect1.vcf
   else
-    #grep -v "^#" < /scratch/VR0320/pgeorgeson/pan-prostate/tmp/mutect1-MINIA52-73ebd0fa-589d-4fc2-acad-6521d4dd28df/$chrom.vcf | cat >> /scratch/VR0320/pgeorgeson/pan-prostate/out/TUMOUR.mutect1.vcf
     grep -v "^#" < TMP_DIR/$chrom.vcf | cat >> ROOT/out/TUMOUR.mutect1.vcf
   fi
   echo "merging $chrom at $(date): done"

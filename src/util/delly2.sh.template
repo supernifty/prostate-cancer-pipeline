@@ -1,0 +1,25 @@
+#!/bin/bash -xv
+#SBATCH --job-name=delly2
+#SBATCH --account ACCOUNT
+#SBATCH --mem=48G
+#SBATCH --time=72:00:00
+#SBATCH --ntasks=5
+#SBATCH --nodes=1
+#SBATCH -p ACCOUNT
+
+set -e
+
+echo "starting delly2 at $(date)"
+
+module load bcftools-intel/1.5
+
+NORMPATH=ROOT/out/TUMOUR.mapped.bam
+TUMPATH=ROOT/out/NORMAL.mapped.bam
+REFERENCE=ROOT/reference-wgs-1.1.2/core_ref_GRCh37d5/genome.fa
+OUTPUT_PREFIX=ROOT/out/TUMOUR.delly2
+
+ROOT/tools/delly_v0.7.8_linux_x86_64bit call -s 9 -q 1 -g $REFERENCE -x ROOT/reference-delly/human.hg19.excl.tsv -o ${OUTPUT_PREFIX}.bcf $TUMPATH $NORMPATH 
+
+bcftools concat -a ${OUTPUT_PREFIX}.bcf > ${OUTPUT_PREFIX}.vcf
+
+echo "finishing delly2 at $(date)"

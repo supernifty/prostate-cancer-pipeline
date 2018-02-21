@@ -259,14 +259,12 @@ def make_pipeline(state):
     #
     # runs the delly singularity container
     #
-    # TODO disabled for now
-
-    #pipeline.transform(
-    #    task_func=stages.delly,
-    #    name='delly',
-    #    input=output_from('align'),
-    #    filter=formatter('(?P<path>.+)/(?P<sample>[a-zA-Z0-9]+).mapped.bam'),
-    #    output='{path[0]}/{sample[0]}.delly.completed')
+#    pipeline.transform(
+#        task_func=stages.delly,
+#        name='delly',
+#        input=output_from('align'),
+#        filter=formatter('(?P<path>.+)/(?P<sample>[a-zA-Z0-9]+).mapped.bam'),
+#        output='{path[0]}/{sample[0]}.delly.completed')
 
     pipeline.transform(
         task_func=stages.gridss,
@@ -310,4 +308,39 @@ def make_pipeline(state):
         filter=formatter('(?P<path>.+)/(?P<sample>[a-zA-Z0-9]+).mapped.bam'),
         output='{path[0]}/{sample[0]}.varscan.completed')
 
+    pipeline.transform(
+        task_func=stages.hmmcopy,
+        name='hmmcopy',
+        input=output_from('align'),
+        filter=formatter('(?P<path>.+)/(?P<sample>[a-zA-Z0-9]+).mapped.bam'),
+        output='{path[0]}/{sample[0]}.hmmcopy.completed')
+
+    pipeline.transform(
+        task_func=stages.callable_bases,
+        name='callable_bases',
+        input=output_from('align'),
+        filter=formatter('(?P<path>.+)/(?P<sample>[a-zA-Z0-9]+).mapped.bam'),
+        output='{path[0]}/{sample[0]}.callable_bases.completed')
+
+    pipeline.transform(
+        task_func=stages.somatic_sniper,
+        name='somatic_sniper',
+        input=output_from('align'),
+        filter=formatter('(?P<path>.+)/(?P<sample>[a-zA-Z0-9]+).mapped.bam'),
+        output='{path[0]}/{sample[0]}.somatic_sniper.completed')
+
+    pipeline.transform(
+        task_func=stages.contest,
+        name='contest',
+        input=output_from('align'),
+        filter=formatter('(?P<path>.+)/(?P<sample>[a-zA-Z0-9]+).mapped.bam'),
+        output='{path[0]}/{sample[0]}.contest.completed')
+
+#    pipeline.transform(
+#        task_func=stages.delly2,
+#        name='delly2',
+#        input=output_from('align'),
+#        filter=formatter('(?P<path>.+)/(?P<sample>[a-zA-Z0-9]+).mapped.bam'),
+#        output='{path[0]}/{sample[0]}.delly2.completed')
+    
     return pipeline
