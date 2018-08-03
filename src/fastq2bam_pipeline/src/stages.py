@@ -50,6 +50,7 @@ class Stages(object):
         '''
 
         # input filenames
+        #fastq_read1_in, fastq_read2_in = input, input.replace('_R1', '_R2')
         fastq_read1_in, fastq_read2_in = inputs
         output_dir = os.path.dirname(bam_out)
 
@@ -186,6 +187,7 @@ class Stages(object):
         '''
           take mapped bams and generate variant calls by running the sanger pipeline cgpwgs
         '''
+        input = input[0]
         prefix = re.sub('.mapped.bam$', '', input) # full path without mapped.bam
         tumour_id = prefix.split('/')[-1] # e.g. CMHS1
         normal_id = util.find_normal(tumour_id, open("{}/cfg/sample-metadata.csv".format(config.ROOT), 'r'))
@@ -559,6 +561,17 @@ class Stages(object):
 
         command = 'echo "{sample_id}" > {prefix}.varscan.tmp && samtools mpileup -B -f {reference}/core_ref_GRCh37d5/genome.fa {input} | java -jar {root}/tools/VarScan.v2.4.2.jar mpileup2snp --output-vcf 1 --vcf-sample-list {prefix}.varscan.tmp 1>{prefix}.varscan.vcf 2>{prefix}.varscan.log.err && touch {output} && rm {prefix}.varscan.tmp'.format(root=config.ROOT, reference=config.REFERENCE, input=input, output=output, prefix=prefix, sample_id=sample_id)
         run_stage(self.state, 'varscan_germline', command)
+
+    def varscan_germline_indel(self, input, output):
+        '''
+          call germline variants
+        '''
+        prefix = re.sub('.mapped.bam$', '', input) # full path without mapped.bam
+        sample_id = prefix.split('/')[-1] # e.g. CMHS1
+
+        command = 'echo "{sample_id}" > {prefix}.varscan_indel.tmp && samtools mpileup -B -f {reference}/core_ref_GRCh37d5/genome.fa {input} | java -jar {root}/tools/VarScan.v2.4.2.jar mpileup2indel --output-vcf 1 --vcf-sample-list {prefix}.varscan_indel.tmp 1>{prefix}.varscan_indel.vcf 2>{prefix}.varscan_indel.log.err && touch {output} && rm {prefix}.varscan_indel.tmp'.format(root=config.ROOT, reference=config.REFERENCE, input=input, output=output, prefix=prefix, sample_id=sample_id)
+        run_stage(self.state, 'varscan_germline_indel', command)
+
 
     def platypus(self, input, output):
         '''

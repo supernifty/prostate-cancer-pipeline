@@ -13,8 +13,8 @@ echo "starting delly at $(date)"
 
 module load bcftools-intel/1.5
 
-NORMPATH=ROOT/out/TUMOUR.mapped.bam
-TUMPATH=ROOT/out/NORMAL.mapped.bam
+NORMPATH=ROOT/out/NORMAL.mapped.bam
+TUMPATH=ROOT/out/TUMOUR.mapped.bam
 REFERENCE=ROOT/reference-wgs-1.1.2/core_ref_GRCh37d5/genome.fa
 OUTPUT_PREFIX=ROOT/out/TUMOUR.delly
 

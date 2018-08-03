@@ -2,6 +2,8 @@
 
 set -e
 
+# make sure all pass files created
+
 echo "mutect vcf files"
 for f in out/*.mutect1.vcf; do
   g=${f/.mutect1.vcf/}
@@ -35,12 +37,14 @@ for f in out/*.platypus.somatic.vcf; do
 done
 
 # make consensus
+
 for f in out/*.caveman.pass.vcf; do
   g=${f/.caveman.pass.vcf/}
   if [ -f "$g.muse.pass.vcf" ] && [ -f "$g.platypus.somatic.pass.vcf" ] && [ -f "$g.mutect1.pass.vcf" ]; then
-    python ~/../shared/pgeorgeson/src/vcf_consensus/src/snv_concordance_vcf.py --minimum_concordance 2 $g.caveman.pass.vcf $g.muse.pass.vcf $g.platypus.somatic.pass.vcf $g.mutect1.pass.vcf > $g.concordance.2.vcf
-    #s=${g/out\//}
+    echo "processing $f..."
+    #python ~/../shared/pgeorgeson/src/vcf_consensus/src/snv_concordance_vcf.py --minimum_concordance 2 $g.caveman.pass.vcf $g.muse.pass.vcf $g.platypus.somatic.pass.vcf $g.mutect1.pass.vcf > $g.concordance.2.vcf
+    s=${g/out\//}
     #python ~/../shared/pgeorgeson/src/vcf_consensus/src/snv_concordance.py $g.caveman.pass.vcf $g.muse.pass.vcf $g.platypus.somatic.pass.vcf $g.mutect1.pass.vcf > tmp/concordance/$s.concordance
-    #python ~/../shared/pgeorgeson/src/vcf_consensus/src/snv_intersect.py --venn $g.venn.png $g.caveman.pass.vcf $g.muse.pass.vcf $g.platypus.somatic.pass.vcf $g.mutect1.pass.vcf > tmp/concordance/$s.intersect
+    python ~/../shared/pgeorgeson/src/vcf_consensus/src/snv_intersect.py --venn_txt tmp/concordance/$s.venn.txt $g.caveman.pass.vcf $g.muse.pass.vcf $g.platypus.somatic.pass.vcf $g.mutect1.pass.vcf > /dev/null
   fi
 done

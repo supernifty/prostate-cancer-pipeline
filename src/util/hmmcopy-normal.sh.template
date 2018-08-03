@@ -33,7 +33,7 @@ echo "starting at $(date)"
 #$ROOT/tools/hmmcopy_utils/bin/mapCounter -c 1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,X,Y $ROOT/reference-hmmcopy/ref.fa.100.bw > $ROOT/reference-hmmcopy/ref.map.wig
 
 # analysis
-#ROOT/tools/hmmcopy_utils/bin/readCounter -c 1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,X,Y ROOT/out/${NORMID}.mapped.bam > ROOT/out/${NORMID}.mapped.bam.wig
+ROOT/tools/hmmcopy_utils/bin/readCounter -c 1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,X,Y ROOT/out/${NORMID}.mapped.bam > ROOT/out/${NORMID}.mapped.bam.wig
 
 #wait
 
@@ -43,8 +43,7 @@ export R_LIBS=ROOT/r-lib
 
 #Rscript ROOT/src/util/hmmcopy.normal.R --ref_dir ROOT/reference-hmmcopy --out_dir TARGET_DIR --normal ROOT/out/${NORMID}.mapped.bam.wig 
 
-# hack
-TARGET=/scratch/VR0211/pan-prostate/${NORMID}.hmmcopy
+TARGET=/scratch/VR0211/pan-prostate/out/${NORMID}.hmmcopy
 mkdir -p $TARGET
 Rscript ROOT/src/util/hmmcopy.normal.R --ref_dir ROOT/reference-hmmcopy --out_dir $TARGET --normal ROOT/out/${NORMID}.mapped.bam.wig 
 

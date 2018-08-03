@@ -11,8 +11,8 @@ set -e
 
 echo "starting gridss at $(date)"
 
-NORMPATH=ROOT/out/TUMOUR.mapped.bam
-TUMPATH=ROOT/out/NORMAL.mapped.bam
+NORMPATH=ROOT/out/NORMAL.mapped.bam
+TUMPATH=ROOT/out/TUMOUR.mapped.bam
 TMPDIR=ROOT/tmp/TUMOUR.gridss
 #BLACKLIST=wgEncodeDacMapabilityConsensusExcludable.bed
 REFERENCE=ROOT/reference-wgs-1.1.2/core_ref_GRCh37d5/genome.fa

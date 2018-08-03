@@ -95,166 +95,195 @@ def make_pipeline(state):
         name='analyse_wgs_prepare',
         input=output_from('align'),
         filter=formatter('(?P<path>.+)/(?P<sample>[a-zA-Z0-9]+).mapped.bam'),
-        output='{path[0]}/{sample[0]}.wgs.1.1.2/completed.prepare')
+        output='{path[0]}/{sample[0]}.wgs.1.1.2-completed.prepare')
 
     pipeline.transform(
         task_func=stages.analyse_wgs_reference_files,
         name='analyse_wgs_reference_files',
-        input=[output_from('align'), output_from('analyse_wgs_prepare')],
+        input=output_from('align'),
+        add_inputs=add_inputs(output_from('analyse_wgs_prepare')),
         filter=formatter('(?P<path>.+)/(?P<sample>[a-zA-Z0-9]+).mapped.bam'),
-        output='{path[0]}/{sample[0]}.wgs.1.1.2/completed.reference_files')
+        output='{path[0]}/{sample[0]}.wgs.1.1.2-completed.reference_files')
 
     pipeline.transform(
         task_func=stages.analyse_wgs_init,
         name='analyse_wgs_init',
-        input=[output_from('align'), output_from('analyse_wgs_reference_files')],
-        filter=formatter('(?P<path>.+)/(?P<sample>[a-zA-Z0-9]+).mapped.bam'),
-        output='{path[0]}/{sample[0]}.wgs.1.1.2/completed.init')
+        input=output_from('align'),
+        add_inputs=add_inputs(output_from('analyse_wgs_reference_files')),
+        filter=formatter('(?P<path>.*)/(?P<sample>[a-zA-Z0-9]+).mapped.bam'),
+        output='{path[0]}/{sample[0]}.wgs.1.1.2-completed.init')
 
     # block 1
     pipeline.transform(
         task_func=stages.analyse_wgs_verify_WT,
         name='analyse_wgs_verify_WT',
-        input=[output_from('align'), output_from('analyse_wgs_init')],
+        input=output_from('align'),
+        add_inputs=add_inputs(output_from('analyse_wgs_init')),
         filter=formatter('(?P<path>.+)/(?P<sample>[a-zA-Z0-9]+).mapped.bam'),
-        output='{path[0]}/{sample[0]}.wgs.1.1.2/completed.verify_WT')
+        output='{path[0]}/{sample[0]}.wgs.1.1.2-completed.verify_WT')
+
+    pipeline.transform(
+        task_func=stages.analyse_wgs_geno,
+        name='analyse_wgs_geno',
+        input=output_from('align'),
+        add_inputs=add_inputs(output_from('analyse_wgs_init')),
+        filter=formatter('(?P<path>.+)/(?P<sample>[a-zA-Z0-9]+).mapped.bam'),
+        output='{path[0]}/{sample[0]}.wgs.1.1.2-completed.geno')
+
 
     #pipeline.transform(
     #    task_func=stages.analyse_wgs_cgpPindel_input,
     #    name='analyse_wgs_cgpPindel_input',
-    #    input=[output_from('align'), output_from('analyse_wgs_init')],
+    #    input=output_from('align'),
+    #    add_inputs=add_inputs(output_from('analyse_wgs_init')),
     #    filter=formatter('(?P<path>.+)/(?P<sample>[a-zA-Z0-9]+).mapped.bam'),
-    #    output='{path[0]}/{sample[0]}.wgs.1.1.2/completed.cgpPindel_input')
+    #    output='{path[0]}/{sample[0]}.wgs.1.1.2-completed.cgpPindel_input')
 
     pipeline.transform(
         task_func=stages.analyse_wgs_alleleCount,
         name='analyse_wgs_alleleCount',
-        input=[output_from('align'), output_from('analyse_wgs_init')],
+        input=output_from('align'),
+        add_inputs=add_inputs(output_from('analyse_wgs_init')),
         filter=formatter('(?P<path>.+)/(?P<sample>[a-zA-Z0-9]+).mapped.bam'),
-        output='{path[0]}/{sample[0]}.wgs.1.1.2/completed.alleleCount')
+        output='{path[0]}/{sample[0]}.wgs.1.1.2-completed.alleleCount')
 
     # block 2
 
     pipeline.transform(
         task_func=stages.analyse_wgs_cgpPindel,
         name='analyse_wgs_cgpPindel',
-        #input=[output_from('align'), output_from('analyse_wgs_cgpPindel_input')],
-        input=[output_from('align'), output_from('analyse_wgs_init')],
+        input=output_from('align'),
+        add_inputs=add_inputs(output_from('analyse_wgs_init')),
         filter=formatter('(?P<path>.+)/(?P<sample>[a-zA-Z0-9]+).mapped.bam'),
-        output='{path[0]}/{sample[0]}.wgs.1.1.2/completed.cgpPindel')
+        output='{path[0]}/{sample[0]}.wgs.1.1.2-completed.cgpPindel')
 
     pipeline.transform(
         task_func=stages.analyse_wgs_BRASS_input,
         name='analyse_wgs_BRASS_input',
-        input=[output_from('align'), output_from('analyse_wgs_init')],
+        input=output_from('align'),
+        add_inputs=add_inputs(output_from('analyse_wgs_init')),
         filter=formatter('(?P<path>.+)/(?P<sample>[a-zA-Z0-9]+).mapped.bam'),
-        output='{path[0]}/{sample[0]}.wgs.1.1.2/completed.BRASS_input')
+        output='{path[0]}/{sample[0]}.wgs.1.1.2-completed.BRASS_input')
 
     pipeline.transform(
         task_func=stages.analyse_wgs_BRASS_cover,
         name='analyse_wgs_BRASS_cover',
-        input=[output_from('align'), output_from('analyse_wgs_init')],
+        input=output_from('align'),
+        add_inputs=add_inputs(output_from('analyse_wgs_init')),
         filter=formatter('(?P<path>.+)/(?P<sample>[a-zA-Z0-9]+).mapped.bam'),
-        output='{path[0]}/{sample[0]}.wgs.1.1.2/completed.BRASS_cover')
+        output='{path[0]}/{sample[0]}.wgs.1.1.2-completed.BRASS_cover')
 
     pipeline.transform(
         task_func=stages.analyse_wgs_CaVEMan_split,
         name='analyse_wgs_CaVEMan_split',
-        input=[output_from('align'), output_from('analyse_wgs_init')],
+        input=output_from('align'),
+        add_inputs=add_inputs(output_from('analyse_wgs_init')),
         filter=formatter('(?P<path>.+)/(?P<sample>[a-zA-Z0-9]+).mapped.bam'),
-        output='{path[0]}/{sample[0]}.wgs.1.1.2/completed.CaVEMan_split')
+        output='{path[0]}/{sample[0]}.wgs.1.1.2-completed.CaVEMan_split')
 
     # block 2.5
     pipeline.transform(
         task_func=stages.analyse_wgs_ascat,
         name='analyse_wgs_ascat',
-        input=[output_from('align'), output_from('analyse_wgs_CaVEMan_split')],
+        input=output_from('align'),
+        add_inputs=add_inputs(output_from('analyse_wgs_CaVEMan_split')),
         filter=formatter('(?P<path>.+)/(?P<sample>[a-zA-Z0-9]+).mapped.bam'),
-        output='{path[0]}/{sample[0]}.wgs.1.1.2/completed.ascat')
+        output='{path[0]}/{sample[0]}.wgs.1.1.2-completed.ascat')
 
     # after block 2
     pipeline.transform(
         task_func=stages.analyse_wgs_ascat_prep,
         name='analyse_wgs_ascat_prep',
-        input=[output_from('align'), output_from('analyse_wgs_ascat')],
+        input=output_from('align'),
+        add_inputs=add_inputs(output_from('analyse_wgs_ascat')),
         filter=formatter('(?P<path>.+)/(?P<sample>[a-zA-Z0-9]+).mapped.bam'),
-        output='{path[0]}/{sample[0]}.wgs.1.1.2/completed.ascat_prep')
+        output='{path[0]}/{sample[0]}.wgs.1.1.2-completed.ascat_prep')
 
     pipeline.transform(
         task_func=stages.analyse_wgs_pindel_prep,
         name='analyse_wgs_pindel_prep',
-        input=[output_from('align'), output_from('analyse_wgs_cgpPindel')],
+        input=output_from('align'),
+        add_inputs=add_inputs(output_from('analyse_wgs_cgpPindel')),
         filter=formatter('(?P<path>.+)/(?P<sample>[a-zA-Z0-9]+).mapped.bam'),
-        output='{path[0]}/{sample[0]}.wgs.1.1.2/completed.pindel_prep')
+        output='{path[0]}/{sample[0]}.wgs.1.1.2-completed.pindel_prep')
 
     # parallel block 3
     pipeline.transform(
         task_func=stages.analyse_wgs_verify_MT,
         name='analyse_wgs_verify_MT',
-        input=[output_from('align'), output_from('analyse_wgs_verify_WT'), output_from('analyse_wgs_ascat_prep')],
+        input=output_from('align'), 
+        add_inputs=add_inputs(output_from('analyse_wgs_verify_WT'), output_from('analyse_wgs_prepare'), output_from('analyse_wgs_ascat')),
         filter=formatter('(?P<path>.+)/(?P<sample>[a-zA-Z0-9]+).mapped.bam'),
-        output='{path[0]}/{sample[0]}.wgs.1.1.2/completed.verify_MT')
+        output='{path[0]}/{sample[0]}.wgs.1.1.2-completed.verify_MT')
 
     pipeline.transform(
         task_func=stages.analyse_wgs_CaVEMan,
         name='analyse_wgs_CaVEMan',
-        input=[output_from('align'), output_from('analyse_wgs_CaVEMan_split'), output_from('analyse_wgs_ascat_prep'), output_from('analyse_wgs_cgpPindel')],
+        input=output_from('align'), 
+        add_inputs=add_inputs(output_from('analyse_wgs_CaVEMan_split'), output_from('analyse_wgs_ascat_prep'), output_from('analyse_wgs_cgpPindel')),
         filter=formatter('(?P<path>.+)/(?P<sample>[a-zA-Z0-9]+).mapped.bam'),
-        output='{path[0]}/{sample[0]}.wgs.1.1.2/completed.CaVEMan')
+        output='{path[0]}/{sample[0]}.wgs.1.1.2-completed.CaVEMan')
 
     pipeline.transform(
         task_func=stages.analyse_wgs_BRASS,
         name='analyse_wgs_BRASS',
-        input=[output_from('align'), output_from('analyse_wgs_BRASS_cover'), output_from('analyse_wgs_BRASS_input'), output_from('analyse_wgs_ascat_prep')],
+        input=output_from('align'), 
+        add_inputs=add_inputs(output_from('analyse_wgs_BRASS_cover'), output_from('analyse_wgs_BRASS_input'), output_from('analyse_wgs_prepare')),
         filter=formatter('(?P<path>.+)/(?P<sample>[a-zA-Z0-9]+).mapped.bam'),
-        output='{path[0]}/{sample[0]}.wgs.1.1.2/completed.BRASS')
+        output='{path[0]}/{sample[0]}.wgs.1.1.2-completed.BRASS')
 
     pipeline.transform(
         task_func=stages.analyse_wgs_cgpPindel_annot,
         name='analyse_wgs_cgpPindel_annot',
-        input=[output_from('align'), output_from('analyse_wgs_pindel_prep')],
+        input=output_from('align'),
+        add_inputs=add_inputs(output_from('analyse_wgs_pindel_prep')),
         filter=formatter('(?P<path>.+)/(?P<sample>[a-zA-Z0-9]+).mapped.bam'),
-        output='{path[0]}/{sample[0]}.wgs.1.1.2/completed.cgpPindel_annot')
+        output='{path[0]}/{sample[0]}.wgs.1.1.2-completed.cgpPindel_annot')
 
     # block 5
     pipeline.transform(
         task_func=stages.analyse_wgs_cgpFlagCaVEMan,
         name='analyse_wgs_cgpFlagCaVEMan',
-        input=[output_from('align'), output_from('analyse_wgs_CaVEMan')],
+        input=output_from('align'),
+        add_inputs=add_inputs(output_from('analyse_wgs_CaVEMan')),
         filter=formatter('(?P<path>.+)/(?P<sample>[a-zA-Z0-9]+).mapped.bam'),
-        output='{path[0]}/{sample[0]}.wgs.1.1.2/completed.cgpFlagCaVEMan')
+        output='{path[0]}/{sample[0]}.wgs.1.1.2-completed.cgpFlagCaVEMan')
 
     # pre block 6
     pipeline.transform(
         task_func=stages.analyse_wgs_CaVEMan_annot_prep,
         name='analyse_wgs_CaVEMan_annot_prep',
-        input=[output_from('align'), output_from('analyse_wgs_cgpFlagCaVEMan')],
+        input=output_from('align'),
+        add_inputs=add_inputs(output_from('analyse_wgs_cgpFlagCaVEMan')),
         filter=formatter('(?P<path>.+)/(?P<sample>[a-zA-Z0-9]+).mapped.bam'),
-        output='{path[0]}/{sample[0]}.wgs.1.1.2/completed.CaVEMan_annot_prep')
+        output='{path[0]}/{sample[0]}.wgs.1.1.2-completed.CaVEMan_annot_prep')
 
     # pre block 6
     pipeline.transform(
         task_func=stages.analyse_wgs_caveman_prep,
         name='analyse_wgs_caveman_prep',
-        input=[output_from('align'), output_from('analyse_wgs_CaVEMan_annot_prep')],
+        input=output_from('align'),
+        add_inputs=add_inputs(output_from('analyse_wgs_CaVEMan_annot_prep')),
         filter=formatter('(?P<path>.+)/(?P<sample>[a-zA-Z0-9]+).mapped.bam'),
-        output='{path[0]}/{sample[0]}.wgs.1.1.2/completed.caveman_prep')
+        output='{path[0]}/{sample[0]}.wgs.1.1.2-completed.caveman_prep')
 
     # block 6
     pipeline.transform(
         task_func=stages.analyse_wgs_CaVEMan_annot,
         name='analyse_wgs_CaVEMan_annot',
-        input=[output_from('align'), output_from('analyse_wgs_caveman_prep')],
+        input=output_from('align'),
+        add_inputs=add_inputs(output_from('analyse_wgs_caveman_prep')),
         filter=formatter('(?P<path>.+)/(?P<sample>[a-zA-Z0-9]+).mapped.bam'),
-        output='{path[0]}/{sample[0]}.wgs.1.1.2/completed.CaVEMan_annot')
+        output='{path[0]}/{sample[0]}.wgs.1.1.2-completed.CaVEMan_annot')
 
     # done
     pipeline.transform(
         task_func=stages.analyse_wgs_finish,
         name='analyse_wgs_finish',
-        input=[output_from('align'), output_from('analyse_wgs_CaVEMan_annot'), output_from('analyse_wgs_BRASS'), output_from('analyse_wgs_cgpPindel_annot'), output_from('analyse_wgs_alleleCount'), output_from('analyse_wgs_verify_MT'), output_from('analyse_wgs_verify_WT')],
+        input=output_from('align'), 
+        add_inputs=add_inputs(output_from('analyse_wgs_CaVEMan_annot'), output_from('analyse_wgs_BRASS'), output_from('analyse_wgs_cgpPindel_annot'), output_from('analyse_wgs_alleleCount'), output_from('analyse_wgs_verify_MT'), output_from('analyse_wgs_verify_WT')),
         filter=formatter('(?P<path>.+)/(?P<sample>[a-zA-Z0-9]+).mapped.bam'),
-        output='{path[0]}/{sample[0]}.wgs.1.1.2/completed.finish')
+        output='{path[0]}/{sample[0]}.wgs.1.1.2-completed.finish')
 
     #
     # runs the delly singularity container
@@ -307,6 +336,13 @@ def make_pipeline(state):
         input=output_from('align'),
         filter=formatter('(?P<path>.+)/(?P<sample>[a-zA-Z0-9]+).mapped.bam'),
         output='{path[0]}/{sample[0]}.varscan.completed')
+
+#    pipeline.transform(
+#        task_func=stages.varscan_germline_indel,
+#        name='varscan_germline_indel',
+#        input=output_from('align'),
+#        filter=formatter('(?P<path>.+)/(?P<sample>[a-zA-Z0-9]+).mapped.bam'),
+#        output='{path[0]}/{sample[0]}.varscan_indel.completed')
 
     pipeline.transform(
         task_func=stages.hmmcopy,

@@ -464,6 +464,11 @@ do_parallel[cgpFlagCaVEMan]="cgpFlagCaVEMan.pl \
 #echo "Starting Parallel block 5: `date`"
 run_parallel do_parallel
 
+# unset and redeclare the parallel array ready for block 5
+unset do_parallel
+declare -A do_parallel
+
+
 if [ "$SUBCOMMAND" == "caveman_annot_prep" ]; then
   # compress and index flagged caveman
   bgzip $OUTPUT_DIR/${PROTOCOL}_${NAME_MT}_vs_${NAME_WT}/caveman/${NAME_MT}_vs_${NAME_WT}.flagged.muts.vcf
@@ -474,6 +479,12 @@ fi
 do_parallel[CaVEMan_annot]="AnnotateVcf.pl -t -c $REF_BASE/vagrent/vagrent.cache.gz \
  -i $OUTPUT_DIR/${PROTOCOL}_${NAME_MT}_vs_${NAME_WT}/caveman/${NAME_MT}_vs_${NAME_WT}.flagged.muts.vcf.gz \
  -o $OUTPUT_DIR/${PROTOCOL}_${NAME_MT}_vs_${NAME_WT}/caveman/${NAME_MT}_vs_${NAME_WT}.annot.muts.vcf"
+
+run_parallel do_parallel
+
+# unset and redeclare the parallel array ready for block 5
+unset do_parallel
+declare -A do_parallel
 
 
 # clean up log files

@@ -15,8 +15,8 @@ logging.basicConfig(format='%(asctime)s %(levelname)s %(message)s', level=loggin
 ENCRYPTION_KEY="cfg/oicr.public.key"
 #TARGET_DIR="./oicr/gatk"
 TARGET_DIR="/scratch/VR0211/pan-prostate/oicr"
-SUFFIX="180220" # encrypted files
-LIVE=True
+SUFFIX="180301" # encrypted files
+LIVE=False
 
 def run(cmd, always=False):
   logging.info('{}...'.format(cmd))
@@ -125,7 +125,7 @@ for line in sys.stdin:
  
  
     result['delly'] = fields[5] or 'TODO' # barcoo
-    filename = '{sample}.delly.vcf'.format(sample=fields[0])
+    filename = '{sample}.delly2.vcf'.format(sample=fields[0])
     full = './out/{}'.format(filename)
     if result['delly'] != 'Uploaded' and os.path.isfile(full):
       counts['delly'] += 1
@@ -134,6 +134,14 @@ for line in sys.stdin:
       files['delly'].append(filename)
 
     result['sniper'] = fields[8] or 'TODO' # not run
+    filename = '{sample}.sniper.high.vcf'.format(sample=fields[0])
+    full = './out/{}'.format(filename)
+    if result['sniper'] != 'Uploaded' and os.path.isfile(full):
+      counts['sniper'] += 1
+      counts['sniper_size'] += os.stat(full).st_size
+      result['sniper'] = 'Uploaded'.format(os.stat(full).st_size) # available
+      files['sniper'].append(filename)
+
 
     # pindel ./out/CMHS189.pindel-1.1.2.vcf.gz
     result['pindel'] = fields[10] or 'TODO'
@@ -179,6 +187,7 @@ encrypt(files['pindel'], 'pindel_{}'.format(SUFFIX))
 encrypt(files['callable'], 'callable_{}'.format(SUFFIX))
 encrypt(files['contest'], 'contest_{}'.format(SUFFIX))
 encrypt(files['delly'], 'delly_{}'.format(SUFFIX))
+encrypt(files['sniper'], 'sniper_{}'.format(SUFFIX))
 # gatk to be done manually
 
 logging.info('{}'.format(counts))
